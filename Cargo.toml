@@ -1,12 +1,12 @@
 [package]
-name = "rustfsm"
+name = "rust-sfsm"
 version = "0.1.0"
 edition = "2024"
 authors = ["H Bacelar"]
 description = "A full static Rust finite state machine macro library"
-documentation = "https://docs.rs/rustfsm/latest/rustfsm"
+documentation = "https://docs.rs/rust-sfsm/latest/rust-sfsm"
 readme = "README.md"
-repository = "https://github.com/hbacelar8/rustfsm"
+repository = "https://github.com/hbacelar8/rust-sfsm"
 license = "MIT"
 keywords = ["state-machine", "fsm", "embedded", "static"]
 categories = ["embedded", "no-std::no-alloc"]

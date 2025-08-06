@@ -1,4 +1,4 @@
-# RustFSM
+# Rust Static FSM
 
 A full static Rust finite state machine macro library.
 
@@ -23,14 +23,8 @@ cargo doc --open
 Add crate to your project
 
 ```bash
-cargo add rustfsm --git ssh://git@bitbucket01.somfytech.com:7999/sne/rustfsm.git
+cargo add rust_sfsm
 ```
-
-Other arguments are also available:
-
-- `--branch`: branch to use when adding from git
-- `--tag`: tag to use when adding from git
-- `--rev`: specific commit to use when adding from git
 
 ## Example
 

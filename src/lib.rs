@@ -16,20 +16,20 @@ pub trait StateBehavior {
     fn exit(&self, _context: &mut Self::Context) {}
 }
 
-/// # RustFSM
+/// # Rust Static FSM
 ///
 /// A full static Rust finite state machine macro library.
 ///
 /// ## Usage
 ///
-/// The `rustfsm` macro takes as input the state machine's name, the states enum,
+/// The `rust_sfsm` macro takes as input the state machine's name, the states enum,
 /// the events enum and the context struct.
 ///
 /// The state machine's name can be just an ident if no other member is necessary
 /// to the struct:
 ///
 /// ```rust,ignore
-/// use rustfsm::{rustfsm, StateBehavior};
+/// use rust_sfsm::{rust_sfsm, StateBehavior};
 ///
 /// #[derive(Clone, Copy, PartialEq)]
 /// enum States {
@@ -46,14 +46,14 @@ pub trait StateBehavior {
 ///     (...)
 /// }
 ///
-/// rustfsm!(FooName, States, Events, Context);
+/// rust_sfsm!(FooName, States, Events, Context);
 /// ```
 ///
 /// The state machine's name can also be a struct with default values if data
 /// other than the cotext is desired:
 ///
 /// ```rust,ignore
-/// rustfsm!(
+/// rust_sfsm!(
 ///     FooName {
 ///         foo_data: u16 = 0,
 ///         boo_data: boo = false,
@@ -64,7 +64,7 @@ pub trait StateBehavior {
 /// );
 /// ```
 #[macro_export]
-macro_rules! rustfsm {
+macro_rules! rust_sfsm {
     // Case 1: With additional members for the state machine struct
     (
         $state_machine_name:ident {
@@ -74,7 +74,7 @@ macro_rules! rustfsm {
         $event_type:ident,
         $context_type:ident
     ) => {
-        rustfsm!(@generate $state_machine_name, $state_type, $event_type, $context_type,
+        rust_sfsm!(@generate $state_machine_name, $state_type, $event_type, $context_type,
             members { $($member_field: $member_field_type = $member_default),* }
         );
     };
@@ -86,7 +86,7 @@ macro_rules! rustfsm {
         $event_type:ident,
         $context_type:ident
     ) => {
-        rustfsm!(@generate $state_machine_name, $state_type, $event_type, $context_type,
+        rust_sfsm!(@generate $state_machine_name, $state_type, $event_type, $context_type,
             members { }
         );
     };

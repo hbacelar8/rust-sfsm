@@ -1,4 +1,4 @@
-use rustfsm::{StateBehavior, rustfsm};
+use rust_sfsm::{StateBehavior, rust_sfsm};
 
 #[derive(Clone, Copy, PartialEq)]
 enum MarioConsumables {
@@ -54,7 +54,7 @@ impl Default for Context {
 }
 
 // Generate the state machine
-rustfsm!(Mario, States, Events, Context);
+rust_sfsm!(Mario, States, Events, Context);
 
 impl StateBehavior for States {
     type State = States;
