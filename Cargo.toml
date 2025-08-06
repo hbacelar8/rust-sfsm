@@ -1,10 +1,10 @@
 [package]
 name = "rust-sfsm"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 authors = ["H Bacelar"]
 description = "A full static Rust finite state machine macro library"
-documentation = "https://docs.rs/rust-sfsm/latest/rust-sfsm"
+documentation = "https://docs.rs/rust-sfsm"
 readme = "README.md"
 repository = "https://github.com/hbacelar8/rust-sfsm"
 license = "MIT"
