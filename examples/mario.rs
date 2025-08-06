@@ -27,6 +27,12 @@ enum States {
     DeadMario,
 }
 
+impl Default for States {
+    fn default() -> Self {
+        Self::AliveMario(AliveStates::SmallMario)
+    }
+}
+
 #[derive(Clone, Copy, PartialEq)]
 enum Events {
     GetConsumable(MarioConsumables),
@@ -140,7 +146,7 @@ impl Mario {
 }
 
 fn main() {
-    let mut mario = Mario::new(States::AliveMario(AliveStates::SmallMario));
+    let mut mario = Mario::new();
 
     // Get a mushroom
     mario.get_consummable(MarioConsumables::Mushroom);

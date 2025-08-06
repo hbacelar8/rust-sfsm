@@ -2,7 +2,7 @@
 
 /// Trait for the state behavior.
 pub trait StateBehavior {
-    type State: Clone + Copy + PartialEq;
+    type State: Clone + Copy + PartialEq + Default;
     type Event: Clone + Copy + PartialEq;
     type Context: Default;
 
@@ -107,10 +107,10 @@ macro_rules! rustfsm {
 
         impl $state_machine_name {
             /// Create a new state machine.
-            pub fn new(initial_state: $state_type) -> Self {
+            pub fn new() -> Self {
                 Self {
-                    current_state: initial_state,
-                    context: $context_type::default(),
+                    current_state: Default::default(),
+                    context: Default::default(),
                     $(
                         $member_field: $member_default,
                     )*
