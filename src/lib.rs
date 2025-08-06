@@ -1,12 +1,12 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-/// Trait for the state behavior
+/// Trait for the state behavior.
 pub trait StateBehavior {
     type State: Clone + Copy + PartialEq;
     type Event: Clone + Copy + PartialEq;
     type Context: Default;
 
-    /// Handle an event and return next state (if a transition occurs)
+    /// Handle an event and return the next state (if a transition occurs).
     fn handle(&self, event: &Self::Event, _context: &mut Self::Context) -> Option<Self::State>;
 
     /// State entry
