@@ -9,10 +9,10 @@ pub trait StateBehavior {
     /// Handle an event and return the next state (if a transition occurs).
     fn handle(&self, event: &Self::Event, _context: &mut Self::Context) -> Option<Self::State>;
 
-    /// State entry
+    /// State entry.
     fn enter(&self, _context: &mut Self::Context) {}
 
-    /// State exit
+    /// State exit.
     fn exit(&self, _context: &mut Self::Context) {}
 }
 
