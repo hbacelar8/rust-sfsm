@@ -4,7 +4,7 @@ members = ["rust-sfsm-macros"]
 
 [package]
 name = "rust-sfsm"
-version = "0.1.2"
+version = "1.0.0"
 edition = "2024"
 authors = ["H Bacelar"]
 description = "A full static Rust finite state machine macro library"
