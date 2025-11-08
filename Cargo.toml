@@ -1,6 +1,10 @@
+[workspace]
+resolver = "3"
+members = ["rust-sfsm-macros"]
+
 [package]
 name = "rust-sfsm"
-version = "0.1.2"
+version = "1.0.0"
 edition = "2024"
 authors = ["H Bacelar"]
 description = "A full static Rust finite state machine macro library"
@@ -11,6 +15,9 @@ license = "MIT"
 keywords = ["state-machine", "fsm", "embedded", "static"]
 categories = ["embedded", "no-std::no-alloc"]
 exclude = ["examples"]
+
+[dependencies]
+rust-sfsm-macros = { version = "0.1.0", path = "./rust-sfsm-macros/" }
 
 [features]
 std = []

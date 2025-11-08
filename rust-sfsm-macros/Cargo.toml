@@ -1,0 +1,20 @@
+[package]
+name = "rust-sfsm-macros"
+version = "0.1.0"
+edition = "2024"
+authors = ["H Bacelar"]
+description = "Attribute macro for the RustSFSM library."
+documentation = "https://docs.rs/rust-sfsm-macros"
+repository = "https://github.com/hbacelar8/rust-sfsm"
+license = "MIT"
+keywords = ["state-machine", "fsm", "embedded", "static"]
+categories = ["embedded", "no-std::no-alloc"]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "2.0.108", features = ["full", "extra-traits"] }
+quote = "1.0.41"
+proc-macro2 = "1.0.103"
+darling = "0.21.3"
