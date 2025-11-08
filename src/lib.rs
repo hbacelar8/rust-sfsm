@@ -2,7 +2,12 @@
 
 pub use rust_sfsm_macros::rust_sfsm;
 
-/// Trait for the state behavior.
+/// # Trait for the state behavior.
+///
+/// This trait should be implemented for an `enum`
+/// representing a set of states.
+///
+/// ## Example
 ///
 /// ```rust
 /// /// List of protocol states.
@@ -78,13 +83,15 @@ pub trait StateBehavior {
     fn exit(&self, _context: &mut Self::Context) {}
 }
 
-/// Trait for the state machine behavior.
+/// # Trait for the state machine behavior.
 ///
 /// This trait is implemented by the [rust_sfsm] attribute macro
 /// and shouldn't be manually implemented by the user.
 ///
 /// It may be used to monomorphize different types implementing
-/// the state machine behavior for a given set of states:
+/// the state machine behavior for a given set of states.
+///
+/// ## Example
 ///
 /// ```rust
 /// fn test_state_machine<S: StateMachine<States>>(state_machine: &mut S) {
