@@ -1,6 +1,5 @@
-use rust_sfsm::{StateBehavior, rust_sfsm};
+use rust_sfsm::{StateBehavior, StateMachine, rust_sfsm};
 
-#[derive(Clone, Copy, PartialEq)]
 enum MarioConsumables {
     Mushroom,
     Flower,
@@ -21,6 +20,7 @@ enum BigMarioStates {
     FireMario,
 }
 
+/// Mario states.
 #[derive(Clone, Copy, PartialEq)]
 enum States {
     AliveMario(AliveStates),
@@ -33,12 +33,13 @@ impl Default for States {
     }
 }
 
-#[derive(Clone, Copy, PartialEq)]
+/// Mario events.
 enum Events {
     GetConsumable(MarioConsumables),
     GetHit,
 }
 
+/// Mario state machine context (data shared between states).
 struct Context {
     number_of_lifes: u8,
     number_of_coins: u16,
@@ -53,12 +54,9 @@ impl Default for Context {
     }
 }
 
-// Generate the state machine
-rust_sfsm!(Mario, States, Events, Context);
-
 impl StateBehavior for States {
     type State = States;
-    type Event = Events;
+    type Event<'a> = Events;
     type Context = Context;
 
     fn enter(&self, context: &mut Self::Context) {
@@ -81,7 +79,11 @@ impl StateBehavior for States {
         }
     }
 
-    fn handle(&self, event: &Self::Event, context: &mut Self::Context) -> Option<Self::State> {
+    fn handle_event(
+        &self,
+        event: &Self::Event<'_>,
+        context: &mut Self::Context,
+    ) -> Option<Self::State> {
         use AliveStates::*;
         use BigMarioStates::*;
         use Events::*;
@@ -123,7 +125,17 @@ impl StateBehavior for States {
     }
 }
 
+#[rust_sfsm(states = States, context = Context)]
+struct Mario {}
+
 impl Mario {
+    fn new() -> Self {
+        Self {
+            current_state: Default::default(),
+            context: Default::default(),
+        }
+    }
+
     fn is_alive(&self) -> bool {
         self.current_state != States::DeadMario
     }
@@ -137,11 +149,11 @@ impl Mario {
     }
 
     fn get_consummable(&mut self, consummable: MarioConsumables) {
-        self.handle(Events::GetConsumable(consummable));
+        self.handle_event(&Events::GetConsumable(consummable));
     }
 
     fn get_hit(&mut self) {
-        self.handle(Events::GetHit);
+        self.handle_event(&Events::GetHit);
     }
 }
 

@@ -1,4 +1,4 @@
-use rust_sfsm::{StateBehavior, rust_sfsm};
+use rust_sfsm::{StateBehavior, StateMachine, rust_sfsm};
 
 /// List of protocol states.
 #[derive(Clone, Copy, Default, PartialEq)]
@@ -11,7 +11,6 @@ enum States {
 }
 
 /// List of protocol events.
-#[derive(Clone, Copy, PartialEq)]
 enum Events {
     Create,
     Open,
@@ -20,15 +19,15 @@ enum Events {
     Unlock,
 }
 
-/// Protocol state machine context.
+/// Protocol state machine context (data shared between states).
 #[derive(Default)]
 struct Context {
     lock_counter: u16,
 }
 
 impl StateBehavior for States {
-    type State = States;
-    type Event = Events;
+    type State = Self;
+    type Event<'a> = Events;
     type Context = Context;
 
     fn enter(&self, _context: &mut Self::Context) {
@@ -37,7 +36,11 @@ impl StateBehavior for States {
         }
     }
 
-    fn handle(&self, event: &Self::Event, _context: &mut Self::Context) -> Option<Self::State> {
+    fn handle_event(
+        &self,
+        event: &Self::Event<'_>,
+        _context: &mut Self::Context,
+    ) -> Option<Self::State> {
         match (self, event) {
             (&States::Init, &Events::Create) => Some(States::Opened),
             (&States::Opened, &Events::Close) => Some(States::Closed),
@@ -49,33 +52,39 @@ impl StateBehavior for States {
     }
 }
 
+#[rust_sfsm(states = States, context = Context)]
+struct Protocol {}
+
 impl Protocol {
-    /// Get number of protocol locking operations.
-    fn lock_counter(&self) -> u16 {
-        self.context.lock_counter
+    fn new() -> Self {
+        Self {
+            current_state: Default::default(),
+            context: Default::default(),
+        }
     }
 }
-
-rust_sfsm!(Protocol, States, Events, Context);
 
 fn main() {
     let mut protocol = Protocol::new();
 
-    assert!(protocol.current_state() == States::Init);
+    test_state_machine(&mut protocol);
+}
 
-    protocol.handle(Events::Create);
-    assert!(protocol.current_state() == States::Opened);
+fn test_state_machine<S: StateMachine<States>>(state_machine: &mut S) {
+    assert!(state_machine.current_state() == States::Init);
 
-    protocol.handle(Events::Close);
-    assert!(protocol.current_state() == States::Closed);
+    state_machine.handle_event(&Events::Create);
+    assert!(state_machine.current_state() == States::Opened);
 
-    protocol.handle(Events::Lock);
-    assert!(protocol.current_state() == States::Locked);
-    assert!(protocol.lock_counter() == 1);
+    state_machine.handle_event(&Events::Close);
+    assert!(state_machine.current_state() == States::Closed);
 
-    protocol.handle(Events::Unlock);
-    assert!(protocol.current_state() == States::Closed);
+    state_machine.handle_event(&Events::Lock);
+    assert!(state_machine.current_state() == States::Locked);
 
-    protocol.handle(Events::Open);
-    assert!(protocol.current_state() == States::Opened);
+    state_machine.handle_event(&Events::Unlock);
+    assert!(state_machine.current_state() == States::Closed);
+
+    state_machine.handle_event(&Events::Open);
+    assert!(state_machine.current_state() == States::Opened);
 }
