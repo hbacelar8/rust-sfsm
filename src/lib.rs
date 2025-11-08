@@ -1,13 +1,75 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+pub use rust_sfsm_macros::rust_sfsm;
+
 /// Trait for the state behavior.
+///
+/// ```rust
+/// /// List of protocol states.
+/// #[derive(Clone, Copy, Default, PartialEq)]
+/// enum States {
+///     #[default]
+///     Init,
+///     Opened,
+///     Closed,
+///     Locked,
+/// }
+///
+/// /// List of protocol events.
+/// enum Events {
+///     Create,
+///     Open,
+///     Close,
+///     Lock,
+///     Unlock,
+/// }
+///
+/// /// Protocol state machine context (data shared between states).
+/// #[derive(Default)]
+/// struct Context {
+///     lock_counter: u16,
+/// }
+///
+/// impl StateBehavior for States {
+///     type State = Self;
+///     type Event<'a> = Events;
+///     type Context = Context;
+///
+///     fn enter(&self, _context: &mut Self::Context) {
+///         if self == &States::Locked {
+///             _context.lock_counter += 1
+///         }
+///     }
+///
+///     fn handle_event(
+///         &self,
+///         event: &Self::Event<'_>,
+///         _context: &mut Self::Context,
+///     ) -> Option<Self::State> {
+///         match (self, event) {
+///             (&States::Init, &Events::Create) => Some(States::Opened),
+///             (&States::Opened, &Events::Close) => Some(States::Closed),
+///             (&States::Closed, &Events::Open) => Some(States::Opened),
+///             (&States::Closed, &Events::Lock) => Some(States::Locked),
+///             (&States::Locked, &Events::Unlock) => Some(States::Closed),
+///             _ => None,
+///         }
+///     }
+/// }
+/// ```
 pub trait StateBehavior {
     type State: Clone + Copy + PartialEq + Default;
-    type Event: Clone + Copy + PartialEq;
-    type Context: Default;
+    type Event<'a>
+    where
+        Self: 'a;
+    type Context;
 
     /// Handle an event and return the next state (if a transition occurs).
-    fn handle(&self, event: &Self::Event, _context: &mut Self::Context) -> Option<Self::State>;
+    fn handle_event(
+        &self,
+        event: &Self::Event<'_>,
+        _context: &mut Self::Context,
+    ) -> Option<Self::State>;
 
     /// State entry.
     fn enter(&self, _context: &mut Self::Context) {}
@@ -16,133 +78,45 @@ pub trait StateBehavior {
     fn exit(&self, _context: &mut Self::Context) {}
 }
 
-/// # Rust Static FSM
+/// Trait for the state machine behavior.
 ///
-/// A full static Rust finite state machine macro library.
+/// This trait is implemented by the [rust_sfsm] attribute macro
+/// and shouldn't be manually implemented by the user.
 ///
-/// ## Usage
+/// It may be used to monomorphize different types implementing
+/// the state machine behavior for a given set of states:
 ///
-/// The `rust_sfsm` macro takes as input the state machine's name, the states enum,
-/// the events enum and the context struct.
+/// ```rust
+/// fn test_state_machine<S: StateMachine<States>>(state_machine: &mut S) {
+///     assert!(state_machine.current_state() == States::Init);
 ///
-/// The state machine's name can be just an ident if no other member is necessary
-/// to the struct:
+///     state_machine.handle_event(&Events::Create);
+///     assert!(state_machine.current_state() == States::Opened);
 ///
-/// ```rust,ignore
-/// use rust_sfsm::{rust_sfsm, StateBehavior};
+///     state_machine.handle_event(&Events::Close);
+///     assert!(state_machine.current_state() == States::Closed);
 ///
-/// #[derive(Clone, Copy, PartialEq)]
-/// enum States {
-///     (...)
+///     state_machine.handle_event(&Events::Lock);
+///     assert!(state_machine.current_state() == States::Locked);
+///
+///     state_machine.handle_event(&Events::Unlock);
+///     assert!(state_machine.current_state() == States::Closed);
+///
+///     state_machine.handle_event(&Events::Open);
+///     assert!(state_machine.current_state() == States::Opened);
 /// }
-///
-/// #[derive(Clone, Copy, PartialEq)]
-/// enum Events {
-///     (...)
-/// }
-///
-/// #[derive(Default)]
-/// struct Context {
-///     (...)
-/// }
-///
-/// rust_sfsm!(FooName, States, Events, Context);
 /// ```
-///
-/// The state machine's name can also be a struct with default values if data
-/// other than the cotext is desired:
-///
-/// ```rust,ignore
-/// rust_sfsm!(
-///     FooName {
-///         foo_data: u16 = 0,
-///         boo_data: boo = false,
-///     },
-///     States,
-///     Events,
-///     Context
-/// );
-/// ```
-#[macro_export]
-macro_rules! rust_sfsm {
-    // Case 1: With additional members for the state machine struct
-    (
-        $state_machine_name:ident {
-            $($member_field:ident: $member_field_type:ty = $member_default:expr),* $(,)?
-        },
-        $state_type:ident,
-        $event_type:ident,
-        $context_type:ident
-    ) => {
-        rust_sfsm!(@generate $state_machine_name, $state_type, $event_type, $context_type,
-            members { $($member_field: $member_field_type = $member_default),* }
-        );
-    };
+pub trait StateMachine<S: StateBehavior> {
+    /// Get the current state.
+    fn current_state(&self) -> S::State;
 
-    // Case 2: Without additional members for the state machine struct
-    (
-        $state_machine_name:ident,
-        $state_type:ident,
-        $event_type:ident,
-        $context_type:ident
-    ) => {
-        rust_sfsm!(@generate $state_machine_name, $state_type, $event_type, $context_type,
-            members { }
-        );
-    };
+    /// Handle an event and transit if necessary.
+    fn handle_event(&mut self, event: &S::Event<'_>);
 
-    // Internal implementation for generating the state machine
-    (
-        @generate $state_machine_name:ident, $state_type:ident, $event_type:ident, $context_type:ident,
-        members { $($member_field:ident: $member_field_type:ty = $member_default:expr),* }
-    ) => {
-        /// State machine struct.
-        pub struct $state_machine_name {
-            current_state: $state_type,
-            context: $context_type,
-            $(
-                $member_field: $member_field_type,
-            )*
-        }
+    /// Transit to a new state.
+    fn transit(&mut self, new_state: S::State);
 
-        impl $state_machine_name {
-            /// Create a new state machine.
-            pub fn new() -> Self {
-                Self {
-                    current_state: Default::default(),
-                    context: Default::default(),
-                    $(
-                        $member_field: $member_default,
-                    )*
-                }
-            }
-
-            /// Transit to a new state.
-            pub fn transit(&mut self, new_state: $state_type) {
-                self.current_state.exit(&mut self.context);
-                self.current_state = new_state;
-                self.current_state.enter(&mut self.context);
-            }
-
-            /// Force transition to a new state without calls to respectives
-            /// `enter` and `exit` functions.
-            pub fn force_state(&mut self, new_state: $state_type) {
-                self.current_state = new_state;
-            }
-
-            /// Get the current state
-            pub fn current_state(&self) -> $state_type {
-                self.current_state
-            }
-
-            /// Handle event and transition if necessary.
-            fn handle(&mut self, event: $event_type) {
-                if let Some(next_state) = self.current_state.handle(&event, &mut self.context) {
-                    self.current_state.exit(&mut self.context);
-                    self.current_state = next_state;
-                    self.current_state.enter(&mut self.context);
-                }
-            }
-        }
-    };
+    /// Force transition to a new state without calls to respectives
+    /// `enter` and `exit` functions.
+    fn force_state(&mut self, new_state: S::State);
 }
